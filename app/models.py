@@ -5,10 +5,29 @@ from datetime import date, datetime
 from typing import Dict, List, Optional
 
 
-def _parse_date(value: str | date) -> date:
+def _parse_date(value: object) -> date:
     if isinstance(value, date):
         return value
-    return datetime.strptime(value, "%Y-%m-%d").date()
+
+    if value is None:
+        return date.today()
+
+    text = str(value).strip()
+    if not text or set(text) == {"#"}:
+        return date.today()
+
+    # Excel serial date support (common in sheet exports)
+    if text.isdigit():
+        base = datetime(1899, 12, 30).date()
+        return base.fromordinal(base.toordinal() + int(text))
+
+    for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%m/%d/%Y", "%d/%m/%Y"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+
+    return date.today()
 
 
 @dataclass
@@ -27,7 +46,7 @@ class Pilot:
         self.available_from = _parse_date(self.available_from)
 
     def certification_set(self) -> set[str]:
-        return {c.strip().lower() for c in self.certifications.split("|") if c.strip()}
+        return {c.strip().lower() for c in self.certifications.replace(",", "|").split("|") if c.strip()}
 
     def to_dict(self) -> Dict[str, str]:
         d = asdict(self)
@@ -50,7 +69,7 @@ class Drone:
         self.last_maintenance_date = _parse_date(self.last_maintenance_date)
 
     def capability_set(self) -> set[str]:
-        return {c.strip().lower() for c in self.capabilities.split("|") if c.strip()}
+        return {c.strip().lower() for c in self.capabilities.replace(",", "|").split("|") if c.strip()}
 
     def to_dict(self) -> Dict[str, str]:
         d = asdict(self)
@@ -78,10 +97,14 @@ class Project:
         self.end_date = _parse_date(self.end_date)
 
     def required_cert_set(self) -> set[str]:
-        return {cert.strip().lower() for cert in self.required_certifications.split("|") if cert.strip()}
+        return {
+            cert.strip().lower() for cert in self.required_certifications.replace(",", "|").split("|") if cert.strip()
+        }
 
     def required_capability_set(self) -> set[str]:
-        return {cap.strip().lower() for cap in self.required_drone_capabilities.split("|") if cap.strip()}
+        return {
+            cap.strip().lower() for cap in self.required_drone_capabilities.replace(",", "|").split("|") if cap.strip()
+        }
 
     def to_dict(self) -> Dict[str, str]:
         d = asdict(self)

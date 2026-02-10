@@ -1,45 +1,38 @@
 # Drone Operations Coordinator AI Agent
 
-Prototype AI coordinator for drone operations with roster management, assignment logic, inventory tracking, conflict detection, and urgent reassignment handling.
+This implementation is updated to work with the **actual CSV/Google Sheet schema** shown in your screenshots:
 
-## What is implemented
+- `pilot_roster`: `pilot_id,name,skills,certification,location,status,current_as,available_from`
+- `drone_fleet`: `drone_id,model,capabilitie,status,location,current_as,maintenance_due`
+- `project_assignments`: `project_id,client,location,required_skill,required_cert,start_date,end_date,priority,status,pilot_id,drone_id`
 
-- **Roster management**
-  - Query pilots by attributes (in core engine)
-  - Update pilot status with write-back persistence
-- **Assignment tracking**
-  - Match pilots and drones to project requirements
-  - Reassignment support through urgent preemption policy
-- **Drone inventory**
-  - Query drones by capability/status/location
-  - Update drone status with write-back persistence
-- **Conflict detection**
-  - Overlapping pilot bookings
-  - Overlapping drone bookings
-  - Certification/skill mismatch
-  - Drone-maintenance assignment conflict
-  - Pilot-drone location mismatch
-- **Google Sheets 2-way sync (optional)**
-  - Reads all entities from sheets
-  - Writes pilot/drone/project updates back to sheets
-  - Falls back to local CSV files when Google integration is not enabled
+## What the agent does
 
-## Project structure
+- Roster queries + pilot status updates (write-back sync)
+- Assignment matching using skill/cert/location/capability/date overlap checks
+- Drone inventory checks + drone status updates
+- Conflict detection for:
+  - pilot double-booking
+  - drone double-booking
+  - missing certification
+  - skill mismatch
+  - drone in maintenance
+  - pilot-drone location mismatch
+- Urgent reassignment preemption for `High`/`Urgent` projects
 
-- `app/coordinator.py` - core decision engine
-- `app/data_store.py` - Google Sheets + CSV abstraction
-- `app/models.py` - domain models
-- `run_agent.py` - conversational CLI interface
-- `data/*.csv` - sample roster, fleet, projects
-- `docs/DECISION_LOG.md` - design rationale and assumptions
+## Important robustness fixes
 
-## Conversational interface (CLI)
+- Handles placeholder dates like `########` (falls back safely)
+- Handles comma-delimited fields (`"DGCA,NightOps"`, `"Thermal,RGB"`)
+- Accepts alias/truncated column names from sheet exports
+
+## Run CLI
 
 ```bash
 python run_agent.py
 ```
 
-Supported commands:
+Commands:
 - `find pilots`
 - `find drones`
 - `detect conflicts`
@@ -47,15 +40,14 @@ Supported commands:
 - `urgent reassign <PROJECT_ID>`
 - `quit`
 
-## Google Sheets setup (optional)
+## Google Sheets 2-way sync (optional)
 
-Set environment variables:
-
+Set:
 - `USE_GOOGLE_SHEETS=true`
 - `GOOGLE_SHEET_NAME="Drone Operations"`
 - `GOOGLE_SERVICE_ACCOUNT_JSON='<service-account-json>'`
 
-Expected worksheets:
+Worksheets:
 - `Pilot Roster`
 - `Drone Fleet`
 - `Project Assignments`
@@ -65,7 +57,3 @@ Expected worksheets:
 ```bash
 pytest -q
 ```
-
-## Hosted prototype note
-
-Given this execution environment blocks dependency installation/network egress for app frameworks, this submission provides a fully runnable CLI prototype and deployment-ready core logic. The same coordinator module can be wrapped by FastAPI/Streamlit in a hosted environment.
