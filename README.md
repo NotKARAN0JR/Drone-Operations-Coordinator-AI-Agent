@@ -1,95 +1,125 @@
 # Drone Operations Coordinator AI Agent
 
-A coordinator agent for drone operations with roster management, assignment tracking, inventory checks, conflict detection, and urgent reassignment.
+This implementation is updated to work with the **actual CSV/Google Sheet schema** shown in your screenshots:
 
-## Supported data schemas
+- `pilot_roster`: `pilot_id,name,skills,certification,location,status,current_as,available_from`
+- `drone_fleet`: `drone_id,model,capabilitie,status,location,current_as,maintenance_due`
+- `project_assignments`: `project_id,client,location,required_skill,required_cert,start_date,end_date,priority,status,pilot_id,drone_id`
 
-The loader supports canonical and alias headers from sheet exports.
+## What the agent does
 
-- Pilot sheet examples:
-  - `pilot_id,name,skills,certification,location,status,current_as,available_from`
-  - `pilot_id,name,skill_level,certifications,current_location,current_assignment,status,available_from`
-- Drone sheet examples:
-  - `drone_id,model,capabilitie,status,location,current_as,maintenance_due`
-  - `drone_id,model,capabilities,status,location,current_assignment,last_maintenance_date`
-- Project sheet examples:
-  - `project_id,client,location,required_skill,required_cert,start_date,end_date,priority,status,pilot_id,drone_id`
-  - `project_id,project_name,required_skill_level,required_certifications,...`
+- Roster queries + pilot status updates (write-back sync)
+- Assignment matching using skill/cert/location/capability/date overlap checks
+- Drone inventory checks + drone status updates
+- Conflict detection for:
+  - pilot double-booking
+  - drone double-booking
+  - missing certification
+  - skill mismatch
+  - drone in maintenance
+  - pilot-drone location mismatch
+- Urgent reassignment preemption for `High`/`Urgent` projects
 
-## Features
+## Important robustness fixes
 
-- Query pilots and drones
-- Detect conflicts (double-booking, skill/cert mismatch, maintenance conflict, location mismatch)
-- Assign pilots + drones to projects
-- Urgent reassignment with lower-priority preemption
-- Google Sheets 2-way sync via environment toggle
+- Handles placeholder dates like `########` (falls back safely)
+- Handles comma-delimited fields (`"DGCA,NightOps"`, `"Thermal,RGB"`)
+- Accepts alias/truncated column names from sheet exports
 
-## Local run
+## How to check the project is working (clear steps)
 
+### 1) Verify required files exist
 ```bash
-pip install -r requirements.txt
-python -m app.gradio_app
+python - << 'PYCHECK'
+from pathlib import Path
+required = [
+    'run_agent.py',
+    'app/coordinator.py',
+    'app/models.py',
+    'app/data_store.py',
+    'data/pilot_roster.csv',
+    'data/drone_fleet.csv',
+    'data/project_assignments.csv',
+]
+missing = [p for p in required if not Path(p).exists()]
+print('OK' if not missing else f'Missing: {missing}')
+PYCHECK
+```
+Expected output: `OK`
+
+### 2) Run automated tests
+```bash
+pytest -q
+```
+Expected output contains: `3 passed`
+
+### 3) Run a CLI smoke test (non-interactive)
+```bash
+python run_agent.py << 'EOCMD'
+find pilots
+find drones
+detect conflicts
+assign PRJ001
+urgent reassign PRJ002
+quit
+EOCMD
+```
+Expected behavior:
+- Prints pilot/drone lists
+- Prints conflict check result
+- Returns clear assignment and urgent reassignment messages
+- Exits cleanly on `quit`
+
+### 4) Run an interactive check (optional)
+```bash
+python run_agent.py
+```
+Then type these commands one by one:
+- `find pilots`
+- `find drones`
+- `detect conflicts`
+- `assign PRJ001`
+- `urgent reassign PRJ002`
+- `quit`
+
+### 5) Validate write-back in CSV mode
+After performing actions, inspect persisted rows:
+```bash
+python - << 'PYCHECK'
+import csv
+for f in ['data/pilot_roster.csv','data/drone_fleet.csv','data/project_assignments.csv']:
+    print('\n==', f, '==')
+    with open(f, newline='', encoding='utf-8') as fh:
+        for i, row in enumerate(csv.DictReader(fh), start=1):
+            if i <= 3:
+                print(row)
+PYCHECK
 ```
 
-CLI mode is still available:
+## Run CLI
 
 ```bash
 python run_agent.py
 ```
 
-## Quick demo prompts
+Commands:
+- `find pilots`
+- `find drones`
+- `detect conflicts`
+- `assign <PROJECT_ID>`
+- `urgent reassign <PROJECT_ID>`
+- `quit`
 
-Use these in the UI command box:
+## Google Sheets 2-way sync (optional)
 
-1. `find pilots`
-2. `find drones`
-3. `detect conflicts`
-4. `assign PRJ001`
-5. `urgent reassign PRJ002`
+Set:
+- `USE_GOOGLE_SHEETS=true`
+- `GOOGLE_SHEET_NAME="Drone Operations"`
+- `GOOGLE_SERVICE_ACCOUNT_JSON='<service-account-json>'`
 
-## Google Sheets configuration
-
-Environment variables:
-
-- `USE_GOOGLE_SHEETS=true|false`
-- `GOOGLE_SHEET_NAME=<your sheet name>`
-- `GOOGLE_SERVICE_ACCOUNT_JSON=<full JSON string>`
-
-Expected worksheets:
-
+Worksheets:
 - `Pilot Roster`
 - `Drone Fleet`
 - `Project Assignments`
 
-If `USE_GOOGLE_SHEETS=false`, the app uses local CSVs in `data/`.
-
-## Hugging Face Spaces (Gradio) deployment
-
-1. Create a new **Gradio Space** on Hugging Face.
-2. Set hardware to **CPU**.
-3. Push this repository to the Space.
-4. In Space **Settings → Variables and secrets**, add:
-   - `USE_GOOGLE_SHEETS=true` (or `false` for CSV mode)
-   - `GOOGLE_SHEET_NAME=Drone Operations` (or your sheet name)
-5. In **Secrets**, add:
-   - `GOOGLE_SERVICE_ACCOUNT_JSON` = full service account JSON value
-6. Ensure `app/gradio_app.py` is present; Gradio app launches via Python module entrypoint.
-
-### Suggested Space startup command
-
-```bash
-python -m app.gradio_app
-```
-
-## Verifying Google Sheets write-back
-
-1. Launch app with `USE_GOOGLE_SHEETS=true` and valid `GOOGLE_SERVICE_ACCOUNT_JSON`.
-2. Execute a write action (e.g., `assign PRJ001` or urgent reassignment).
-3. Open the source Google Sheet and confirm updated values in pilot/drone/project rows.
-4. Re-run `detect conflicts` to verify state consistency.
-
-## Tests
-
-```bash
-pytest -q
-```
+Then run the same CLI checks; updates will write back to Sheets.
