@@ -1,0 +1,5 @@
+pilot_id,name,skills,certification,location,status,current_as,available_from
+P001,Arjun,"Mapping,Survey",DGCA,Bangalore,Available,,2026-02-10
+P002,Neha,Inspection,DGCA,Mumbai,Assigned,Project-A,########
+P003,Rohit,Inspection,DGCA,Mumbai,Available,,########
+P004,Sneha,"Survey,Thermal","DGCA,NightOps",Bangalore,On Leave,,2026-03-01
