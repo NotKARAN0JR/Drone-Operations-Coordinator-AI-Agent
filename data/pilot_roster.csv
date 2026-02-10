@@ -1,0 +1,6 @@
+pilot_id,name,skill_level,certifications,drone_experience,current_location,current_assignment,status,available_from
+P001,Ava Patel,Expert,"Part107|NightOps|Thermal",DJI-Matrice-300|Parrot-Anafi-Thermal,Austin,PRJ-101,Assigned,2026-02-15
+P002,Noah Kim,Intermediate,"Part107|NightOps",DJI-Mavic-3-Enterprise,Dallas,,Available,2026-02-10
+P003,Liam Chen,Expert,"Part107|Thermal",DJI-Matrice-300|Skydio-X10,Houston,PRJ-103,Assigned,2026-02-20
+P004,Emma Ruiz,Beginner,"Part107",DJI-Mavic-3-Enterprise,San Antonio,,On Leave,2026-03-01
+P005,Sophia Green,Intermediate,"Part107|BVLOS",Skydio-X10,Austin,,Available,2026-02-10

@@ -1,0 +1,5 @@
+project_id,project_name,required_skill_level,required_certifications,required_drone_capabilities,location,start_date,end_date,pilot_id,drone_id,priority,status
+PRJ-101,Refinery Thermal Sweep,Expert,"Part107|Thermal",thermal,Austin,2026-02-10,2026-02-14,P001,D001,High,Active
+PRJ-102,Solar Farm Mapping,Intermediate,"Part107",mapping,Dallas,2026-02-12,2026-02-16,,,Medium,Open
+PRJ-103,Bridge Inspection,Expert,"Part107",inspection,Houston,2026-02-11,2026-02-18,P003,D003,High,Active
+PRJ-104,Emergency Storm Assessment,Intermediate,"Part107|NightOps",inspection|thermal,Austin,2026-02-10,2026-02-11,,,Urgent,Open

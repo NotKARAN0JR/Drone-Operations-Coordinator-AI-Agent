@@ -1,0 +1,6 @@
+drone_id,model,serial_number,capabilities,current_assignment,status,location,last_maintenance_date
+D001,DJI Matrice 300,SN-M300-001,"thermal|mapping|long-range",PRJ-101,Deployed,Austin,2026-01-15
+D002,Parrot Anafi Thermal,SN-ANAFI-101,"thermal|inspection",,Available,Dallas,2026-01-25
+D003,Skydio X10,SN-SKY-889,"inspection|autonomy|mapping",PRJ-103,Deployed,Houston,2026-01-28
+D004,DJI Mavic 3 Enterprise,SN-M3E-445,"mapping|survey",,Maintenance,San Antonio,2026-02-02
+D005,DJI Mavic 3 Enterprise,SN-M3E-777,"mapping|survey|inspection",,Available,Austin,2026-01-20
