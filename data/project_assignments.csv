@@ -1,0 +1,4 @@
+project_id,client,location,required_skill,required_cert,start_date,end_date,priority,status,pilot_id,drone_id
+PRJ001,Client A,Bangalore,Mapping,DGCA,2026-02-12,2026-02-14,High,Open,,
+PRJ002,Client B,Mumbai,Inspection,"DGCA,NightOps",########,########,Urgent,Open,,
+PRJ003,Client C,Bangalore,Thermal,DGCA,2026-02-13,2026-02-15,Standard,Active,P004,D004
